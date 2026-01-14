@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 antialiased;
+  }
+}
+
+@layer components {
+  .yantra-glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl;
+  }
+}
+
+/* Custom animation for the scanning line */
+@keyframes scan {
+  0% { transform: translateY(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(320px); opacity: 0; }
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
+}
