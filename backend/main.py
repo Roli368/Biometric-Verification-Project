@@ -3,6 +3,14 @@ from app.liveness import POSPulseExtractor
 import numpy as np
 
 app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 extractor = POSPulseExtractor(fps=30)
 
 @app.post("/verify-liveness")
