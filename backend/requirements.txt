@@ -6,3 +6,9 @@ numpy
 torch
 torchvision
 timm
+numpy
+opencv-python
+mediapipe
+scipy
+fastapi
+uvicorn
