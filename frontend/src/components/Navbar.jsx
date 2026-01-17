@@ -1,44 +1,51 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, X, Shield } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Shield, Database, Terminal, Cpu } from "lucide-react";
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
-
+export default function Navbar() {
   return (
-    <nav className="bg-slate-950/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-[100]">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        {/* Brand */}
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold text-white">Y</div>
-          <span className="text-xl font-bold tracking-tighter text-white">YANTRA</span>
+    <header className="sticky top-0 w-full z-[100] bg-[#020617] border-b border-white/5">
+      {/* TOP UTILITY TIER */}
+      <div className="h-9 bg-black/40 flex items-center px-6 justify-between text-[10px] font-mono tracking-widest text-slate-500 border-b border-white/5">
+        <div className="flex gap-6">
+          <span className="flex items-center gap-2">
+            <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse"/> 
+            SYSTEM_REPLICA: ACTIVE
+          </span>
+          <span className="hidden md:block">LATENCY: 14ms</span>
         </div>
-
-        {/* Desktop Links */}
-        <div className="hidden md:flex gap-8 text-xs font-mono uppercase tracking-[0.2em] text-slate-400">
-          <button onClick={() => navigate('/about')} className="hover:text-white transition">Technology</button>
-          <a href="/#stats" className="hover:text-white transition">Benchmarks</a>
-          <button className="hover:text-white transition">Compliance</button>
+        <div className="flex gap-4">
+          <span className="text-cyan-500/50 underline">SECURITY_AUDIT_PASS</span>
         </div>
-
-        {/* Action Button */}
-        <div className="hidden md:block">
-          <button 
-            onClick={() => navigate('/verify')}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition shadow-lg shadow-blue-600/20"
-          >
-            Launch Engine
-          </button>
-        </div>
-
-        {/* Hamburger */}
-        <button className="md:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
       </div>
-    </nav>
-  );
-};
 
-export default Navbar;
+      {/* PRIMARY NAV TIER */}
+      <nav className="h-20 px-6 md:px-10 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 flex items-center justify-center text-white font-black text-xl rounded-sm">Y</div>
+            <div className="flex flex-col">
+              <span className="text-xl font-black tracking-tighter text-white uppercase italic">Yantra</span>
+              <span className="text-[9px] font-mono text-cyan-500 tracking-[0.3em]">NEURAL_ID</span>
+            </div>
+          </Link>
+          
+          <div className="hidden lg:flex gap-8 text-[11px] font-bold tracking-widest text-slate-400">
+            <Link to="/" className="hover:text-cyan-400 transition-colors">SYSTEMS</Link>
+            <Link to="/verify" className="hover:text-cyan-400 transition-colors">VERIFY_ENGINE</Link>
+            <Link to="/about" className="hover:text-cyan-400 transition-colors">RESEARCH</Link>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button className="hidden sm:flex items-center gap-2 text-slate-400 hover:text-white font-mono text-[10px] border border-white/10 px-4 py-2">
+            <Terminal size={14}/> CONSOLE
+          </button>
+          <Link to="/verify" className="bg-blue-600 hover:bg-cyan-500 text-white hover:text-slate-950 px-6 py-2.5 rounded-full text-xs font-black tracking-widest transition-all">
+            RUN DEMO
+          </Link>
+        </div>
+      </nav>
+    </header>
+  );
+}
