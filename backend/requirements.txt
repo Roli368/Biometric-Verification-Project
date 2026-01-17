@@ -1,3 +1,6 @@
+
+
+
 fastapi
 uvicorn
 python-multipart
@@ -12,3 +15,5 @@ mediapipe
 scipy
 fastapi
 uvicorn
+scipy
+

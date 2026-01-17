@@ -165,3 +165,56 @@ class UltimateLiveness10:
         scores = [45 < bpm < 160, ent > 1.2, sharp > 3, blink_e > 1.3, depth > 1e-5, temp > 0.5, chall]
         trust = sum(scores) / len(scores)
         return ("LIVE HUMAN" if trust > 0.9 else "SPOOF"), trust
+
+class POSPulseExtractor:
+    def __init__(self, low_hz=0.7, high_hz=4.0):
+        self.low_hz = low_hz
+        self.high_hz = high_hz
+
+    def butter_bandpass_filter(self, data, fps):
+        nyq = 0.5 * fps
+        low = self.low_hz / nyq
+        high = self.high_hz / nyq
+        b, a = butter(4, [low, high], btype="band")
+        return filtfilt(b, a, data)
+
+    def extract_pulse(self, rgb_buffer, fps):
+        """
+        Args:
+            rgb_buffer: List of [R, G, B] averages per frame
+            fps: Frames per second of capture
+
+        Returns:
+            filtered_pulse: rPPG signal
+            is_screen: True if screen replay detected
+        """
+
+        rgb_array = np.array(rgb_buffer, dtype=np.float32)
+
+        # Normalize RGB
+        mean_rgb = np.mean(rgb_array, axis=0)
+        norm_rgb = rgb_array / (mean_rgb + 1e-6)
+
+        # POS method
+        s1 = norm_rgb[:, 1] - norm_rgb[:, 2]
+        s2 = -2 * norm_rgb[:, 0] + norm_rgb[:, 1] + norm_rgb[:, 2]
+
+        alpha = np.std(s1) / (np.std(s2) + 1e-6)
+        raw_h = s1 + alpha * s2
+
+        # Bandpass filter
+        filtered_pulse = self.butter_bandpass_filter(raw_h, fps)
+
+        # FFT-based screen detection
+        n = len(filtered_pulse)
+        yf = fft(filtered_pulse)
+        xf = fftfreq(n, 1 / fps)
+
+        high_freq_energy = np.sum(np.abs(yf[xf > 5.0]))
+        low_freq_energy = np.sum(
+            np.abs(yf[(xf >= self.low_hz) & (xf <= self.high_hz)])
+        )
+
+        is_screen = (high_freq_energy / (low_freq_energy + 1e-6)) > 0.5
+
+        return filtered_pulse, is_screen

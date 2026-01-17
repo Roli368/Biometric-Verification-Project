@@ -4,3 +4,7 @@ __pycache__/
 face_module/models/checkpoints/
 FaceDetectionViT/models/checkpoints/
 node_modules/
+backend/venv/
+__pycache__/
+*.pyc
+.DS_Store
