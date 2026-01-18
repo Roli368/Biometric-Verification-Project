@@ -1,15 +1,10 @@
-PROJECT_DIR = "/kaggle/working/FaceDetectionViT"
+import os
 
-SPLIT_JSON   = f"{PROJECT_DIR}/data/annotations/split.json"
-IDMAP_JSON   = f"{PROJECT_DIR}/data/annotations/id_map.json"
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # face_module/
 
-IMG_SIZE     = 224
-EMBED_DIM    = 512
+IMG_SIZE = 224
+EMBED_DIM = 512
+BACKBONE = "vit_small_patch16_224"
 
-BATCH_SIZE   = 64
-LR           = 1e-4
-EPOCHS       = 1
-NUM_WORKERS  = 2
-
-ARC_S        = 30.0
-ARC_M        = 0.5
+CHECKPOINT_PATH = os.path.join(BASE_DIR, "models", "checkpoints", "ckpt_latest.pth")
+GALLERY_PATH    = os.path.join(BASE_DIR, "models", "exported", "gallery.pth")
