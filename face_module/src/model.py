@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import timm
@@ -13,10 +12,10 @@ class ViTFaceEmbedder(nn.Module):
             num_classes=0
         )
 
-        backbone_out = self.backbone.num_features
+        out_dim = self.backbone.num_features
 
         self.embedding = nn.Sequential(
-            nn.Linear(backbone_out, embed_dim),
+            nn.Linear(out_dim, embed_dim),
             nn.BatchNorm1d(embed_dim)
         )
 
