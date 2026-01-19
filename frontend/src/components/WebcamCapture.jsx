@@ -1,60 +1,43 @@
-import React, { useState } from "react";
+import React from "react";
 import Webcam from "react-webcam";
 import { Camera } from "lucide-react";
-import { useWebcam } from "../hooks/useWebcam";
 
-const WebcamCapture = ({ onVerify, isProcessing }) => {
-  const { webcamRef, captureRGBFrame } = useWebcam();
-  const [status, setStatus] = useState("");
+const WebcamCapture = ({ onVerify }) => {
+  const webcamRef = React.useRef(null);
 
-  const startLivenessCheck = async () => {
-    setStatus("Capturing liveness...");
-    const frames = [];
-    const fps = 30;
-    const totalFrames = 90;
+  const captureSelfie = async () => {
+    const base64 = webcamRef.current.getScreenshot();
+    if (!base64) return;
 
-    // ---- Capture one selfie image (base64) ----
-    const selfieImage = webcamRef.current.getScreenshot();
-
-    // ---- Capture RGB frames for rPPG ----
-    for (let i = 0; i < totalFrames; i++) {
-      const rgb = captureRGBFrame();
-      if (rgb) frames.push(rgb);
-      await new Promise((res) => setTimeout(res, 1000 / fps));
-    }
-
-    setStatus("");
-
-    // ---- Send EVERYTHING to backend ----
-    onVerify({
-      fps,
-      rgb_frames: frames,
-      selfie_image: selfieImage,
-    });
+    const blob = await fetch(base64).then((res) => res.blob());
+    onVerify({ selfieBlob: blob });
   };
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black">
-      <Webcam
-        audio={false}
-        ref={webcamRef}
-        screenshotFormat="image/jpeg"
-        className="w-full"
-      />
-
-      <div className="absolute bottom-6 inset-x-0 flex flex-col items-center gap-2">
-        {status && <p className="text-xs text-blue-400">{status}</p>}
-        <button
-          onClick={startLivenessCheck}
-          disabled={isProcessing}
-          className="bg-blue-600 px-8 py-3 rounded-full font-bold flex items-center gap-2"
-        >
-          <Camera size={18} />
-          {isProcessing ? "Processing..." : "Verify Living Form"}
-        </button>
+    <div className="w-full max-w-sm mx-auto space-y-4">
+      {/* Webcam container */}
+      <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black">
+        <Webcam
+          ref={webcamRef}
+          screenshotFormat="image/jpeg"
+          className="w-full h-64 object-cover"
+          videoConstraints={{
+            facingMode: "user",
+          }}
+        />
       </div>
+
+      {/* Action button */}
+      <button
+        onClick={captureSelfie}
+        className="w-full bg-blue-600 hover:bg-blue-700 transition px-6 py-3 rounded-full font-semibold flex items-center justify-center gap-2"
+      >
+        <Camera size={18} />
+        Capture & Verify
+      </button>
     </div>
   );
 };
 
 export default WebcamCapture;
+

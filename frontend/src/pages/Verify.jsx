@@ -1,94 +1,97 @@
 import React, { useState } from "react";
-import WebcamCapture from "../components/WebcamCapture";
 import UploadCard from "../components/UploadCard";
+import WebcamCapture from "../components/WebcamCapture";
 import ResultCard from "../components/ResultCard";
 import Loader from "../components/Loader";
-import { verifyBiometrics } from "../services/api";
+import { verifyFace } from "../services/api";
 
 const Verify = () => {
   const [idImage, setIdImage] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [bbox, setBbox] = useState(null);
+  const [imgSize, setImgSize] = useState(null);
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Receives: { fps, rgb_frames, selfie_image }
-  const handleVerify = async (verificationData) => {
-    if (!idImage) {
-      alert("Please upload a Static Shadow (ID) first.");
-      return;
-    }
-
-    if (!verificationData?.selfie_image) {
-      alert("Selfie capture failed. Please try again.");
-      return;
-    }
-
-    setIsProcessing(true);
+  const handleUpload = (file) => {
+    setIdImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setBbox(null);
     setResult(null);
+    setImgSize(null);
+  };
 
+  const handleVerify = async ({ selfieBlob }) => {
+    if (!idImage) {
+      alert("Upload ID image first");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const data = await verifyBiometrics(idImage, verificationData);
+      const data = await verifyFace(idImage, selfieBlob);
+      setBbox(data.bbox);
       setResult(data);
-    } catch (error) {
-      console.error("Verification Engine Error:", error);
-      alert("Verification failed. Check backend logs.");
+    } catch (e) {
+      alert("Verification failed");
     } finally {
-      setIsProcessing(false);
+      setLoading(false);
     }
   };
 
+  // ---- Scale bbox correctly to displayed image ----
+  const scaledBox =
+    bbox && imgSize
+      ? {
+          left: `${(bbox.x / bbox.img_w) * imgSize.width}px`,
+          top: `${(bbox.y / bbox.img_h) * imgSize.height}px`,
+          width: `${(bbox.w / bbox.img_w) * imgSize.width}px`,
+          height: `${(bbox.h / bbox.img_h) * imgSize.height}px`,
+        }
+      : null;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-10 text-center">
-          <h1 className="text-3xl font-bold tracking-tighter mb-2 uppercase">
-            Identity Trial
-          </h1>
-          <p className="text-slate-500 font-mono text-sm tracking-widest uppercase">
-            Initializing Biometric Sensors
-          </p>
-        </header>
+    <div className="min-h-screen bg-slate-950 text-white px-6 py-10">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Input Section */}
-          <div className="space-y-8">
-            <section>
-              <h3 className="text-xs font-mono text-blue-500 mb-4 uppercase tracking-[0.2em]">
-                Step 1: Static Shadow (ID)
-              </h3>
-              <UploadCard onUpload={setIdImage} selectedImage={idImage} />
-            </section>
+        {/* LEFT PANEL */}
+        <div className="space-y-6">
+          <UploadCard onUpload={handleUpload} selectedImage={idImage} />
 
-            <section>
-              <h3 className="text-xs font-mono text-blue-500 mb-4 uppercase tracking-[0.2em]">
-                Step 2: Living Form (Selfie)
-              </h3>
-
-              <WebcamCapture
-                onVerify={handleVerify}
-                isProcessing={isProcessing}
+          {previewUrl && (
+            <div className="relative w-full max-w-sm mx-auto rounded-xl overflow-hidden border border-white/10 bg-black">
+              
+              {/* IMAGE */}
+              <img
+                src={previewUrl}
+                alt="ID Preview"
+                className="w-full h-64 object-contain bg-black relative z-10"
+                onLoad={(e) =>
+                  setImgSize({
+                    width: e.target.clientWidth,
+                    height: e.target.clientHeight,
+                  })
+                }
               />
-            </section>
-          </div>
 
-          {/* Analysis Section */}
-          <div className="bg-slate-900/40 rounded-3xl border border-white/5 p-8 relative min-h-[400px]">
-            <h3 className="text-xs font-mono text-slate-500 mb-8 uppercase tracking-[0.2em]">
-              Engine Logic Output
-            </h3>
+              {/* GREEN BOX (FINAL FIX) */}
+              {scaledBox && (
+                <div
+                  className="absolute border-2 border-green-500 pointer-events-none z-20"
+                  style={scaledBox}
+                />
+              )}
+            </div>
+          )}
 
-            {isProcessing ? (
-              <Loader text="Analyzing biometric signals..." />
-            ) : result ? (
-              <ResultCard data={result} />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-slate-600 opacity-50">
-                <p className="text-sm font-mono tracking-widest">
-                  AWAITING BIOMETRIC SIGNALS
-                </p>
-              </div>
-            )}
-          </div>
+          <WebcamCapture onVerify={handleVerify} />
         </div>
+
+        {/* RIGHT PANEL */}
+        <div className="min-h-[300px] bg-slate-900/40 rounded-2xl border border-white/5 p-6">
+          {loading ? <Loader /> : <ResultCard data={result} />}
+        </div>
+
       </div>
     </div>
   );

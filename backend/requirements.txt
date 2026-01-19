@@ -1,19 +1,30 @@
 
 
 
-fastapi
-uvicorn
+# ======================
+# FastAPI backend
+# ======================
+fastapi==0.128.0
+uvicorn==0.40.0
 python-multipart
-opencv-python
-numpy
+
+# ======================
+# Core scientific stack
+# ======================
+numpy==1.26.4
+scipy==1.11.4
+
+# ======================
+# Computer Vision
+# ======================
+opencv-python==4.8.1.78
+mediapipe==0.10.14
+
+# ======================
+# Deep Learning
+# ======================
 torch
 torchvision
 timm
-numpy
-opencv-python
-mediapipe
-scipy
-fastapi
-uvicorn
-scipy
+
 
