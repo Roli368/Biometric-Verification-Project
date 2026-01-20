@@ -14,7 +14,9 @@ PROJECT_ROOT = os.path.abspath(
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 
-from app.liveness import UltimateLiveness10
+# Import your real liveness class
+from app.liveness import LivenessDetector   # ← changed from UltimateLiveness10
+
 from app.face_verify import FaceVerifier
 
 # -------------------------------------------------
@@ -61,19 +63,8 @@ class LivenessRequest(BaseModel):
 
 
 # -------------------------------------------------
-# Liveness Endpoint
+# Liveness Endpoint — NOW USING YOUR REAL LIVENESS LOGIC
 # -------------------------------------------------
-@app.get("/")
-def root():
-    return {
-        "status": "Biometric Verification API is running",
-        "endpoints": ["/verify-face", "/verify-liveness", "/docs"]
-    }
-
-
-
-
-
 @app.post("/verify-liveness")
 def verify_liveness(req: LivenessRequest):
     try:
@@ -84,29 +75,45 @@ def verify_liveness(req: LivenessRequest):
                 "trust_score": 0.0
             }
 
-        engine = UltimateLiveness10()
+        # Create new detector instance for this request (safe & stateless)
+        detector = LivenessDetector()
+        # Optional: detector.reset()  # already called in __init__
+
         frames = [np.array(f, dtype=np.uint8) for f in req.rgb_data]
 
-        verdict, trust = None, 0.0
+        last_verdict = "UNKNOWN"
+        last_trust = 0.0
+        final_is_alive = False
+
         for frame in frames:
-            verdict, trust = engine.verify(frame)
+            result, _ = detector.process_frame(frame)
+            
+            # Update latest values
+            last_verdict = result.get("verdict", "UNKNOWN")
+            last_trust = result.get("trust_score", 0.0)
+            final_is_alive = result.get("is_alive", False)
+
+            # Early exit if clearly spoofed (optimization)
+            if not final_is_alive and detector.spoof_streak > 10:
+                break
 
         return {
-            "is_alive": verdict == "LIVE HUMAN",
-            "verdict": verdict,
-            "trust_score": round(float(trust), 4)
+            "is_alive": final_is_alive,
+            "verdict": last_verdict,
+            "trust_score": round(float(last_trust), 4)
         }
 
     except Exception as e:
         return {
             "is_alive": False,
             "verdict": "ERROR",
+            "trust_score": 0.0,
             "error": str(e)
         }
 
 
 # -------------------------------------------------
-# Face Verification Endpoint (UPDATED)
+# Face Verification Endpoint (UNCHANGED)
 # -------------------------------------------------
 @app.post("/verify-face")
 def verify_face(
@@ -164,3 +171,14 @@ def verify_face(
             "bbox": bbox,
             "error": str(e)
         }
+
+
+# -------------------------------------------------
+# Root Endpoint (UNCHANGED)
+# -------------------------------------------------
+@app.get("/")
+def root():
+    return {
+        "status": "Biometric Verification API is running",
+        "endpoints": ["/verify-face", "/verify-liveness", "/docs"]
+    }
