@@ -1,10 +1,12 @@
-__pycache__/
-*.pyc
-*.pth
-face_module/models/checkpoints/
-FaceDetectionViT/models/checkpoints/
+.venv/
 node_modules/
-backend/venv/
+*.log
 __pycache__/
-*.pyc
 .DS_Store
+Thumbs.db
+
+# Large model files (use Git LFS or download separately)
+# *.onnx  <-- Handled by Git LFS now
+
+# Uploaded user files
+uploads/
